@@ -2,6 +2,10 @@ import socket
 import threading
 import pygame
 import random
+import winsound
+import math
+import datetime
+import os
 
 from queue import Queue
 from ctypes import pointer, POINTER, cast, c_int, c_float
@@ -60,7 +64,7 @@ class MindWaveClient:
         thread.start()
 
     def run(self):
-        while not True:
+        while True:
             mindwave_data = self.s.recv(BUFFER_SIZE).hex().upper()
             if mindwave_data and not self.buffer.full():
                 if len(mindwave_data) < 50:
@@ -240,75 +244,186 @@ class SpeechOperator:
                          "Difficult, very difficult.",
                          "Are you afraid of what you will hear?",
                          "Don’t worry, child."]
+        self.on_start_sounds = [
+            [
+                "sound/on_start/whereshalli1.wav",
+                "sound/on_start/whereshalli2.wav"
+            ],
+            [
+                "sound/on_start/thisisinteresting1.wav"
+            ],
+            [
+                "sound/on_start/verydifficult1.wav"
+            ],
+            [
+                "sound/on_start/areyouafraid1.wav",
+                "sound/on_start/areyouafraid2.wav"
+            ],
+            [
+                "sound/on_start/dontworry1.wav",
+                "sound/on_start/dontworry2.wav"
+            ]
+        ]
 
         self.random = ["Ah, right then.",
                        "Hmm, okay...",
                        "I think I know what to do with you..."]
+        self.random_sounds = [
+            [
+                "sound/random/ahrightthen1.wav",
+                "sound/random/ahrightthen2.wav"
+            ],
+            [
+                "sound/random/hmmokay1.wav",
+                "sound/random/hmmokay2.wav",
+                "sound/random/hmmokay3.wav"
+            ],
+            [
+                "sound/random/ithinkiknow1.wav"
+            ]
+        ]
 
         self.house_quotes = []
+        self.house_quotes_sounds = []
         for i1 in range(0, 4):
             self.house_quotes.append([])
+            self.house_quotes_sounds.append([])
         self.house_quotes[0] = ["Plenty of courage...",
                                 "Yes... very brave.",
                                 "You have a lot of nerve!",
                                 "GRYFFINDOR!"]
+        self.house_quotes_sounds[0] = [
+            [
+                "sound/gryffindor/plentyofcourage1.wav"
+            ],
+            [
+                "sound/gryffindor/yesverybrave1.wav"
+            ],
+            [
+                "sound/gryffindor/alotofnerve1.wav"
+            ],
+            [
+                "sound/gryffindor/gryffindor1.wav",
+                "sound/gryffindor/gryffindor2.wav"
+            ]
+        ]
 
         self.house_quotes[1] = ["Patient and loyal...",
                                 "Hard work will get you far.",
                                 "Strong sense of justice...",
                                 "HUFFLEPUFF!"]
+        self.house_quotes_sounds[1] = [
+            [
+                "sound/hufflepuff/patientandloyal1.wav"
+            ],
+            [
+                "sound/hufflepuff/hardwork1.wav"
+            ],
+            [
+                "sound/hufflepuff/strongsenseofjustice1.wav",
+                "sound/hufflepuff/strongsenseofjustice2.wav"
+            ],
+            [
+                "sound/hufflepuff/hufflepuff1.wav",
+                "sound/hufflepuff/hufflepuff2.wav"
+            ]
+        ]
 
         self.house_quotes[2] = ["Not a bad mind.",
                                 "There's talent! Interesting...",
                                 "Quite smart...",
                                 "RAVENCLAW!"]
+        self.house_quotes_sounds[2] = [
+            [
+                "sound/ravenclaw/notabadmind1.wav",
+                "sound/ravenclaw/notabadmind2.wav"
+            ],
+            [
+                "sound/ravenclaw/therestalent1.wav",
+                "sound/ravenclaw/therestalent2.wav"
+            ],
+            [
+                "sound/ravenclaw/quitesmart1.wav",
+                "sound/ravenclaw/quitesmart2.wav"
+            ],
+            [
+                "sound/ravenclaw/ravenclaw1.wav",
+                "sound/ravenclaw/ravenclaw2.wav"
+            ]
+        ]
 
         self.house_quotes[3] = ["A nice thirst to prove yourself.",
                                 "Quite ambitious, yes...",
                                 "Great sense of self-preservation...",
-                                "SLITHERIN!"]
+                                "SLYTHERIN!"]
+        self.house_quotes_sounds[3] = [
+            [
+                "sound/slitherin/anicethirst1.wav"
+            ],
+            [
+                "sound/slitherin/quiteambitious1.wav",
+                "sound/slitherin/quiteambitious2.wav"
+            ],
+            [
+                "sound/slitherin/greatsenseofself1.wav",
+                "sound/slitherin/greatsenseofself2.wav"
+            ],
+            [
+                "sound/slitherin/slitherin1.wav",
+                "sound/slitherin/slitherin2.wav"
+            ]
+        ]
 
-        self.seconds = 4
+        self.seconds = 3
         self.used_quotes = []
         self.parser = _parser
+        self.last_amount = self.parser.attention.total_amount
         self.house_points = []  # Gryffindor, Hufflepuff, Ravenclaw, Slytherin
         for i1 in range(0, 4):
             self.house_points.append(0)
 
-    def update(self):
+    def update(self, only_points):
         _text = None
         _frames = 0
         _big_text = False
-        if self.parser.waves_values[0].total_amount >= 11:
-            self.house_points[0] += ((2 * self.parser.wave_values[6].average) /
-                                     (self.parser.wave_values[6].total_average + self.wave_baselines[6])) + \
-                                    ((2 * self.parser.wave_values[7].average) /
-                                     (self.parser.wave_values[7].total_average + self.wave_baselines[7]))
-            self.house_points[1] += ((2 * self.parser.wave_values[0].average) /
-                                     (self.parser.wave_values[0].total_average + self.wave_baselines[0])) + \
-                                    ((2 * self.parser.wave_values[4].average) /
-                                     (self.parser.wave_values[4].total_average + self.wave_baselines[4]))
-            self.house_points[2] += ((2 * self.parser.wave_values[1].average) /
-                                     (self.parser.wave_values[1].total_average + self.wave_baselines[1])) + \
-                                    ((2 * self.parser.wave_values[5].average) /
-                                     (self.parser.wave_values[5].total_average + self.wave_baselines[5]))
-            self.house_points[3] += ((2 * self.parser.wave_values[2].average) /
-                                     (self.parser.wave_values[2].total_average + self.wave_baselines[2])) + \
-                                    ((2 * self.parser.wave_values[3].average) /
-                                     (self.parser.wave_values[3].total_average + self.wave_baselines[3]))
+        if self.last_amount != self.parser.attention.total_amount and self.parser.waves_values[0].total_amount > 10:
+            self.last_amount = self.parser.attention.total_amount
+            self.house_points[0] += ((2 * self.parser.waves_values[6].average) /
+                                     (self.parser.waves_values[6].total_average + self.wave_baselines[6])) + \
+                                    ((2 * self.parser.waves_values[7].average) /
+                                     (self.parser.waves_values[7].total_average + self.wave_baselines[7]))
+            self.house_points[1] += ((2 * self.parser.waves_values[0].average) /
+                                     (self.parser.waves_values[0].total_average + self.wave_baselines[0])) + \
+                                    ((2 * self.parser.waves_values[4].average) /
+                                     (self.parser.waves_values[4].total_average + self.wave_baselines[4]))
+            self.house_points[2] += ((2 * self.parser.waves_values[1].average) /
+                                     (self.parser.waves_values[1].total_average + self.wave_baselines[1])) + \
+                                    ((2 * self.parser.waves_values[5].average) /
+                                     (self.parser.waves_values[5].total_average + self.wave_baselines[5]))
+            self.house_points[3] += ((2 * self.parser.waves_values[2].average) /
+                                     (self.parser.waves_values[2].total_average + self.wave_baselines[2])) + \
+                                    ((2 * self.parser.waves_values[3].average) /
+                                     (self.parser.waves_values[3].total_average + self.wave_baselines[3]))
+            print("House points: Gryffindor (" + str(self.house_points[0])
+                  + "), Hufflepuff (" + str(self.house_points[1])
+                  + "), Ravenclaw (" + str(self.house_points[2])
+                  + "), Slytherin (" + str(self.house_points[3]) + ")")
 
-            if (self.parser.waves_values[0].total_amount - 10) % 7 == 0:
-                if self.parser.waves_values[0].total_amount == 17:
+            if (self.parser.waves_values[0].total_amount - 10) % 6 == 0 and not only_points:
+                if self.parser.waves_values[0].total_amount == 16:
                     _text = random.choice(self.on_start)
+                    index = self.on_start.index(_text)
+                    winsound.PlaySound(random.choice(self.on_start_sounds[index]), winsound.SND_ASYNC)
                     _frames = int(self.seconds * 60)
-                elif self.parser.waves_values[0].total_amount == 45:
+                elif self.parser.waves_values[0].total_amount == 40:
                     highest_house = self.house_points.index(max(self.house_points))
                     _text = self.house_quotes[highest_house][3]
-                    _frames = int(self.seconds * 600)
+                    winsound.PlaySound(random.choice(self.house_quotes_sounds[highest_house][3]), winsound.SND_ASYNC)
+                    _frames = int(self.seconds * 60 * 3)
                     _big_text = True
                 else:
                     random_or_house = random.randint(0, 10)
-                    if random_or_house < 5:
+                    if random_or_house < 2:
                         _text = random.choice(self.random)
                         while True:
                             if _text in self.used_quotes:
@@ -316,19 +431,27 @@ class SpeechOperator:
                             else:
                                 break
                         self.used_quotes.append(_text)
+                        index = self.random.index(_text)
+                        winsound.PlaySound(random.choice(self.random_sounds[index]), winsound.SND_ASYNC)
                         _frames = int(self.seconds * 60)
                     else:
                         highest_house = self.house_points.index(max(self.house_points))
-                        _text = random.choice(self.house_quotes[highest_house])
+                        random_house_quote = random.randint(0, 2)
+                        _text = self.house_quotes[highest_house][random_house_quote]
                         while True:
                             if _text in self.used_quotes:
-                                _text = random.choice(self.house_quotes[highest_house])
+                                random_house_quote = random.randint(0, 2)
+                                _text = self.house_quotes[highest_house][random_house_quote]
                             else:
                                 break
                         self.used_quotes.append(_text)
+                        index = self.house_quotes[highest_house].index(_text)
+                        winsound.PlaySound(random.choice(self.house_quotes_sounds[highest_house][index]),
+                                           winsound.SND_ASYNC)
                         _frames = int(self.seconds * 60)
 
-        return _text, _frames, _big_text
+        if not only_points:
+            return _text, _frames, _big_text
 
     def reset(self):
         for i1 in range(0, 4):
@@ -351,8 +474,6 @@ class SortingHat:
         self.speechbox_big_image = pygame.image.load("img/speechboxbig.png").convert()
         self.speechbox_small_image = pygame.image.load("img/speechboxsmall.png").convert()
         self.speech = _speech
-        self.text_surface = text_to_surface(random.choice(_speech.houses), True)
-        self.big_text = True
         self.parser = _parser
         self.hat_transparency = 0
         self.speechbox_transparency = 0
@@ -384,13 +505,18 @@ class SortingHat:
         self.hat_talking = is_talking
 
     def draw(self, _window, _width, _height):    # left 80% of screen
-        if not self.chosen and not self.hat_talking:
-            self.text, self.frames_left, sbig_text = self.speech.update()
+        if not self.chosen:
+            if not self.hat_talking:
+                self.text, self.frames_left, self.big_text = self.speech.update(self.hat_talking)
+            else:
+                self.speech.update(self.hat_talking)
             if self.big_text:
                 self.chosen = True
-            if self.frames_left != 0:
-                self.text_surface = text_to_surface(self.text, self.big_text)
-                self.hat_talking = True
+                save_to_logs(self.speech, self.parser)
+            if not self.hat_talking:
+                if self.frames_left != 0:
+                    self.text_surface = text_to_surface(self.text, self.big_text)
+                    self.hat_talking = True
 
         if self.hat_talking:
             self.frames_left -= 1
@@ -415,8 +541,6 @@ class SortingHat:
         self.speechbox_big_image.set_alpha(self.speechbox_transparency)
         self.speechbox_small_image.set_alpha(self.speechbox_transparency)
         self.hat_image_talking.set_alpha(self.speechbox_transparency)
-        if self.text_surface is not None:
-            self.text_surface.set_alpha(self.speechbox_transparency)
 
         if self.big_text:
             _window.blit(self.speechbox_big_image, self.speechbox_big_rect)
@@ -425,7 +549,7 @@ class SortingHat:
         _window.blit(self.hat_image_sleeping, self.hat_rect)
         _window.blit(self.hat_image, self.hat_rect)
         _window.blit(self.hat_image_talking, self.hat_rect)
-        if self.text_surface is not None:
+        if self.text_surface is not None and self.speechbox_transparency > 64:
             if self.big_text:
                 _window.blit(self.text_surface,
                              (int(self.speechbox_big_rect.x +
@@ -441,8 +565,8 @@ class SortingHat:
 
 
 def draw_waves(_window, _width, _height, _parser, _speech, _wave_renders, _wave_changes):      # right 20% of screen
-    clear_window(_window, _width - 300, 0, 300, _height)
     indent = 300
+    clear_window(_window, _width - indent, 0, indent, _height)
     temp_x = _width - indent
     temp_y = 0
     _window.blit(_wave_renders[8], (temp_x + int((indent - _wave_renders[8].get_width())/2), temp_y))
@@ -451,7 +575,7 @@ def draw_waves(_window, _width, _height, _parser, _speech, _wave_renders, _wave_
         _window.blit(_wave_renders[i1], (temp_x + int((indent - _wave_renders[i1].get_width())/2), temp_y))
         temp_y += _wave_renders[i1].get_height()
         average = (_speech.wave_baselines[i1] + _parser.waves_values[i1].total_average) / 2
-        percentage = _parser.waves_values[i1].get_last() / average
+        percentage = _parser.waves_values[i1].get_last() * 100 / average
         wave_change = _wave_changes[7]
         if percentage > 200:
             wave_change = _wave_changes[6]
@@ -474,8 +598,8 @@ def draw_waves(_window, _width, _height, _parser, _speech, _wave_renders, _wave_
 def draw_signal(_window, _width, _height, _parser):     # down left corner
     _signal = _parser.signal.get_last()
     _attention = _parser.attention.get_last()
-    _meditation = _parser.attention.get_last()
-    if _signal == -1:
+    _meditation = _parser.meditation.get_last()
+    if _signal == -1 or _signal == 200:
         _signal = 200
         _attention = 0
         _meditation = 0
@@ -493,12 +617,92 @@ def draw_signal(_window, _width, _height, _parser):     # down left corner
     return _signal
 
 
+def save_to_logs(speech, parser):
+    file = open("Logs.txt", "a")
+    file.write(str(datetime.datetime.now()) + "\n")
+    file.write("House points:\n")
+    house_list = []
+    for x1 in range(0, 4):
+        house_list.append((speech.houses[x1], speech.house_points[x1]))
+    for x1 in range(0, 4):
+        file.write(house_list[x1][0] + ": " + str(house_list[x1][1]) + "\n")
+    file.write("Waves: \n")
+    for x1 in range(0, 8):
+        file.write(parser.waves[x1] + ": " + str(parser.waves_values[x1].total_average) + "\n")
+    file.write("\n")
+    file.close()
+
+
+class Candles:
+    def __init__(self, attention, meditation):
+        self.candle_unlit = pygame.image.load("img/candleunlit.png").convert()
+        self.candle1 = pygame.image.load("img/candle1.png").convert()
+        self.candle2 = pygame.image.load("img/candle2.png").convert()
+        self.flame_transparency = 0
+        self.candle_width = self.candle1.get_width()
+        self.candle_height = self.candle1.get_height()
+        self.candles = []
+        self.amount = 0
+        self.candle_switch = False
+        self.attention = attention
+        self.meditation = meditation
+        self.lit = False
+        self.alpha = 0
+        self.one_degree = math.pi / 180
+
+    def set_lit(self, is_lit):
+        self.lit = is_lit
+
+    def add(self, _x, _y, _r_x, _r_y, _degree, _left, _speed):
+        self.candles.append([_x, _y, _r_x, _r_y, _degree * self.one_degree, _left, _speed, 0])
+        self.amount += 1
+
+    def draw(self, _window):
+        attention_value = self.attention.get_last()
+        if self.lit:
+            if self.flame_transparency < 28 + attention_value:
+                self.flame_transparency += 5
+            elif self.flame_transparency < 155 + attention_value and self.candle_switch:
+                self.flame_transparency += 3
+                if self.flame_transparency >= 155 + attention_value:
+                    self.candle_switch = not self.candle_switch
+            else:
+                self.flame_transparency -= 3
+                if self.flame_transparency <= 28 + attention_value:
+                    self.candle_switch = not self.candle_switch
+        else:
+            if self.flame_transparency > 0:
+                self.flame_transparency -= 5
+
+        self.candle1.set_alpha(self.flame_transparency)
+        self.candle2.set_alpha(self.flame_transparency)
+        speed_modifier = 1 - self.meditation.get_last()/100
+
+        for i1 in range(0, self.amount):
+            clear_window(_window, self.candles[i1][0], self.candles[i1][1],
+                         int(2 * self.candles[i1][2] + self.candle_width),
+                         int(2 * self.candles[i1][3] + self.candle_height))
+            temp_x = self.candles[i1][0] + self.candles[i1][2] + int(
+                self.candles[i1][2] * math.cos(self.candles[i1][4]) * (-1 if self.candles[i1][5] else 1))
+            temp_y = self.candles[i1][1] + self.candles[i1][3] + int(
+                self.candles[i1][3] * math.sin(self.candles[i1][4]))
+            self.candles[i1][4] += self.one_degree / self.candles[i1][6] * speed_modifier
+            _window.blit(self.candle_unlit, (temp_x, temp_y))
+            if self.candles[i1][5]:
+                _window.blit(self.candle1, (temp_x, temp_y)) if self.candle_switch \
+                    else _window.blit(self.candle2, (temp_x, temp_y))
+            else:
+                _window.blit(self.candle2, (temp_x, temp_y)) if self.candle_switch \
+                    else _window.blit(self.candle1, (temp_x, temp_y))
+
+
 pygame.init()
 width = WIDTH
 height = HEIGHT
 title = "Sorting Hat for MindWave"
 
-window = pygame.display.set_mode((width, height), pygame.FULLSCREEN)
+os.putenv('SDL_VIDEO_WINDOW_POS', '0,0')
+window = pygame.display.set_mode((width, height), pygame.NOFRAME)
 pygame.mouse.set_visible(False)
 pygame.display.set_caption(title)
 clock = pygame.time.Clock()
@@ -512,16 +716,51 @@ p = MindWaveParser()
 c = Colors()
 s = SpeechOperator(p)
 hat = SortingHat(s, width - 300, height, p)
+candles = Candles(p.attention, p.meditation)
+
+min_speed = 2
+max_speed = 4
+ellipse_width = 5
+ellipse_height = 70
+
+candles.add(150, 10, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
+candles.add(460, 180, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
+candles.add(780, 30, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
+candles.add(1110, 150, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
+candles.add(100, 530, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
+candles.add(270, 770, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
+candles.add(1300, 500, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
+candles.add(1450, 800, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
+candles.add(1500, 5, ellipse_width, ellipse_height, random.randint(0, 360),
+            random.choice([True, False]), random.randint(min_speed, max_speed))
 
 wave_renders = []
 for i in range(0, 8):
-    wave_renders.append(font_small.render(p.waves[i], True, c.white))
+    color = c.white
+    if p.waves[i] == "Delta" or p.waves[i] == "low Beta":
+        color = c.brown
+    if p.waves[i] == "Theta" or p.waves[i] == "high Beta":
+        color = c.blue
+    if p.waves[i] == "low Alpha" or p.waves[i] == "high Alpha":
+        color = c.green
+    if p.waves[i] == "low Gamma" or p.waves[i] == "high Gamma":
+        color = c.yellow
+
+    wave_renders.append(font_small.render(p.waves[i], True, color))
 wave_renders.append(font_smallm.render("Waves:", True, c.white))
 
 wave_changes_renders = [font_smallm.render("- - -", True, c.red),
                         font_smallm.render("- -", True, c.medred),
                         font_smallm.render("-", True, c.darkred),
-                        font_smallm.render("+/-", True, c.cyan),
+                        font_smallm.render("=", True, c.cyan),
                         font_smallm.render("+", True, c.green),
                         font_smallm.render("+ +", True, c.medgreen),
                         font_smallm.render("+ + +", True, c.lightgreen),
@@ -534,33 +773,37 @@ while True:
             quit(0)
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F11:
-                pygame.display.set_mode((width, height), pygame.FULLSCREEN)
+                pygame.display.set_mode((width, height), pygame.NOFRAME)
                 pygame.mouse.set_visible(False)
             elif event.key == pygame.K_ESCAPE:
                 pygame.display.set_mode((width, height))
                 pygame.mouse.set_visible(True)
-            elif event.key == pygame.K_LEFT:    # DELETE
-                hat.set_sleeping(not hat.hat_sleeping)
             elif event.key == pygame.K_RIGHT:
-                hat.set_talking(not hat.hat_talking)
+                sleeping_frames = 0
+                s.reset()
+                p.reset()
+                hat.reset()
 
     window.fill(c.black5)
     signal = draw_signal(window, width, height, p)
     if signal < 10:
         hat.set_sleeping(False)
+        candles.set_lit(True)
         sleeping_frames = 0
     else:
         hat.set_talking(False)
         hat.set_sleeping(True)
+        candles.set_lit(False)
         sleeping_frames += 1
 
-    if sleeping_frames >= 600:
+    if sleeping_frames >= 300:
         sleeping_frames = 0
         s.reset()
         p.reset()
         hat.reset()
 
     draw_waves(window, width, height, p, s, wave_renders, wave_changes_renders)
+    candles.draw(window)
     hat.draw(window, width, height)
     pygame.display.flip()
     clock.tick(60)
