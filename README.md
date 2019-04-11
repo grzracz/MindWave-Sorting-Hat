@@ -19,7 +19,7 @@ Brainwaves used by specific houses are color coded to that houses color:
 
 The application works pretty consistently and usually will sort people only into one or two houses in normal circumstances. It saves all values to **Logs.txt** when a house is chosen and resets itself if right arrow is pressed or after **5** seconds of imperfect signal.
 
-Sorting Hat was voiced by <a href="https://www.fiverr.com/philhulett">Phil Hulett</a>. **SOUND FILES AVAILABLE IN THIS PROJECT ARE NOT COVERED BY THE MIT LICENSE.**
+Sorting Hat was voiced by <a href="http://philhulett.com/">Phil Hulett</a>. **SOUND FILES AVAILABLE IN THIS PROJECT ARE NOT COVERED BY THE MIT LICENSE.**
 
 <br>
 <p align="center">
