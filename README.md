@@ -7,7 +7,7 @@ Writen in **Python**, using libraries: **socket, <a href="https://github.com/pyg
 
 **ThinkGear Connector** needs to be installed and running for the application to work. It was written for the old version of MindWave.
 
-The application reads only the waves correctly transmitted (when signal is **100/100**). After getting enough brainwaves to calculate a baseline (after around **10** seconds) it will start to count points towards the houses based on if the reading of a specific brainwave is higher or lower than the overall baseline.
+The application reads only the waves correctly transmitted (when signal is **100/100**). After getting enough brainwaves to calculate a baseline (after around **10** seconds) it will start counting points towards the houses based on if the reading of a specific brainwave is higher or lower than the overall baseline.
 
 Brainwaves used by specific houses are color coded to that houses color:
 - **Gryffindor** - Yellow 
