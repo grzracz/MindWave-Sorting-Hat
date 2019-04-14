@@ -1,5 +1,5 @@
 # Sorting Hat for MindWave
-*Written on 8 Apr 2019*
+*Written on 8 Apr 2019.*
 
 Sorting Hat application that shows you the Hogwarts house you belong to based on your brainwave readings.
 
